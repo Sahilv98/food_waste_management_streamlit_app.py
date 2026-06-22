@@ -2,8 +2,6 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import os
-import random
-from datetime import date, timedelta
 
 # ── Database Setup ────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,110 +9,6 @@ DB_DIR = os.path.join(BASE_DIR, "database")
 os.makedirs(DB_DIR, exist_ok=True)
 db_path = os.path.join(DB_DIR, "food_waste.db")
 conn = sqlite3.connect(db_path, check_same_thread=False)
-
-def init_db():
-    """Create tables and seed sample data if the DB is empty."""
-    cur = conn.cursor()
-
-    cur.executescript("""
-        CREATE TABLE IF NOT EXISTS providers (
-            Provider_ID INTEGER PRIMARY KEY,
-            Name        TEXT,
-            Type        TEXT,
-            Address     TEXT,
-            City        TEXT,
-            Contact     TEXT
-        );
-        CREATE TABLE IF NOT EXISTS receivers (
-            Receiver_ID INTEGER PRIMARY KEY,
-            Name        TEXT,
-            Type        TEXT,
-            City        TEXT,
-            Contact     TEXT
-        );
-        CREATE TABLE IF NOT EXISTS food_listings (
-            Food_ID       INTEGER PRIMARY KEY,
-            Food_Name     TEXT,
-            Quantity      INTEGER,
-            Expiry_Date   TEXT,
-            Provider_ID   INTEGER,
-            Provider_Type TEXT,
-            Location      TEXT,
-            Food_Type     TEXT,
-            Meal_Type     TEXT
-        );
-        CREATE TABLE IF NOT EXISTS claims (
-            Claim_ID    INTEGER PRIMARY KEY,
-            Food_ID     INTEGER,
-            Receiver_ID INTEGER,
-            Status      TEXT,
-            Timestamp   TEXT
-        );
-    """)
-
-    # Only seed if tables are empty
-    if cur.execute("SELECT COUNT(*) FROM providers").fetchone()[0] > 0:
-        return
-
-    cities = ["Delhi", "Mumbai", "Bengaluru", "Chennai", "Hyderabad",
-              "Pune", "Kolkata", "Ahmedabad", "Jaipur", "Lucknow"]
-    provider_types = ["Restaurant", "Hotel", "Catering", "Grocery Store", "NGO"]
-    receiver_types = ["Shelter", "Orphanage", "Old Age Home", "Food Bank", "Community Kitchen"]
-    food_types = ["Vegetarian", "Non-Vegetarian", "Vegan"]
-    meal_types = ["Breakfast", "Lunch", "Dinner", "Snacks"]
-    food_names = ["Rice & Dal", "Bread Pakora", "Biryani", "Paneer Curry",
-                  "Sambar Rice", "Idli", "Poha", "Khichdi", "Vegetable Pulao",
-                  "Chicken Curry", "Rajma Chawal", "Chole Bhature"]
-    statuses = ["Completed", "Pending", "Cancelled"]
-
-    random.seed(42)
-
-    # 50 providers
-    providers = []
-    for i in range(1, 51):
-        city = random.choice(cities)
-        ptype = random.choice(provider_types)
-        providers.append((i, f"{ptype} {i}", ptype, f"{i} Main St, {city}", city, f"9{random.randint(100000000,999999999)}"))
-    cur.executemany("INSERT INTO providers VALUES (?,?,?,?,?,?)", providers)
-
-    # 50 receivers
-    receivers = []
-    for i in range(1, 51):
-        city = random.choice(cities)
-        rtype = random.choice(receiver_types)
-        receivers.append((i, f"{rtype} {i}", rtype, city, f"8{random.randint(100000000,999999999)}"))
-    cur.executemany("INSERT INTO receivers VALUES (?,?,?,?,?)", receivers)
-
-    # 200 food listings
-    listings = []
-    today = date.today()
-    for i in range(1, 201):
-        prov = random.choice(providers)
-        expiry = today + timedelta(days=random.randint(-2, 10))
-        listings.append((
-            i,
-            random.choice(food_names),
-            random.randint(5, 200),
-            str(expiry),
-            prov[0], prov[2],   # Provider_ID, Provider_Type
-            prov[4],             # City as Location
-            random.choice(food_types),
-            random.choice(meal_types)
-        ))
-    cur.executemany("INSERT INTO food_listings VALUES (?,?,?,?,?,?,?,?,?)", listings)
-
-    # 300 claims
-    claims = []
-    for i in range(1, 301):
-        food = random.choice(listings)
-        recv = random.choice(receivers)
-        ts = f"2024-{random.randint(1,12):02d}-{random.randint(1,28):02d}"
-        claims.append((i, food[0], recv[0], random.choice(statuses), ts))
-    cur.executemany("INSERT INTO claims VALUES (?,?,?,?,?)", claims)
-
-    conn.commit()
-
-init_db()
 
 #-----------------------------------------------------------------------------------
 
@@ -470,7 +364,7 @@ elif section == "📊  SQL Insights & Analytics":
             st.dataframe(pd.read_sql(query15, conn))
 
 # ══════════════════════════════════════════════════════════
-# SECTION 3: CRUD Operations (placeholder — built next)
+# SECTION 3: CRUD Operations
 # ══════════════════════════════════════════════════════════
 elif section == "🛠️  Manage Records (CRUD)":
     st.header("🛠️ Manage Records (CRUD)")
@@ -564,7 +458,7 @@ elif section == "🛠️  Manage Records (CRUD)":
                 st.success(f"✅ Food_ID {selected_del_id} deleted successfully!")
 
 # ══════════════════════════════════════════════════════════
-# SECTION 4: Provider Contact Directory (placeholder — built next)
+# SECTION 4: Provider Contact Directory
 # ══════════════════════════════════════════════════════════
 elif section == "📞  Provider Directory":
     st.header("📞 Provider Directory")
@@ -590,7 +484,7 @@ elif section == "📞  Provider Directory":
     st.dataframe(directory, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════
-# SECTION 5: Charts & Wastage Trends (placeholder — built next)
+# SECTION 5: Wastage Trends & Visualizations
 # ══════════════════════════════════════════════════════════
 elif section == "📈  Wastage Trends & Visualizations":
     st.header("📈 Wastage Trends & Visualizations")
