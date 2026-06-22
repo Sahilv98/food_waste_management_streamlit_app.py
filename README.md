@@ -1,0 +1,1 @@
+# food_waste_management_streamlit_app.py
